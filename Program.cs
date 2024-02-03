@@ -35,7 +35,7 @@ internal static class Program
         Console.WriteLine($"Shere radius is : 6371000");
         Console.WriteLine($"point A:{pointaECEF.x},Y:{pointaECEF.y},Z: {pointaECEF.z}");
         Console.WriteLine($"point B:{pointbECEF.x},Y:{pointbECEF.y},Z: {pointbECEF.z}");
-        Console.WriteLine($"point C:{pointcECEF.x},Y:{pointcECEF.y},Z: {pointcECEF.z}");
+        Console.WriteLine($"point C:{pointcECEF.x},Y:{pointcECEF.y},Z: {pointcECEF.z} -<");
         Console.WriteLine("");
         Console.WriteLine($"estAnws2ECEF C:{estAnws2ECEF.x},Y:{estAnws2ECEF.y},Z: {estAnws2ECEF.z}");
         Console.WriteLine("");
@@ -104,6 +104,7 @@ internal static class Program
         // maths check 
 
         Console.WriteLine($"Maths check ");
+
         Console.WriteLine(Math.Cos(-45));
         Console.WriteLine(Math.Sin(-45));
         Console.WriteLine(Math.Sqrt(2)/2);
@@ -244,7 +245,7 @@ public class EarthIntersectPointFinder
     }
 }
 
-public class Vector3D
+public class Vector3D // ?
 {
     public double X { get; set; }
     public double Y { get; set; }
@@ -277,4 +278,5 @@ public class Vector3D
     {
         return new Vector3D(vector1.X + vector2.X, vector1.Y + vector2.Y, vector1.Z + vector2.Z);
     }
+
 }
