@@ -3,6 +3,15 @@ using System;
 
 namespace FovCubeMaker;
 
+// TODO
+// 1. Walk though
+// 2. repeatable process
+// 3 used ecef and lla converted walk though
+// 4. testable and 3d party checkable
+// 5. plot points onto a  PLOT POINTS ONTO A 3D GRID AND SEE
+// 6. clean up
+// 7. write up
+
 internal static class Program
 {
     const double EARTH_RADIUS = 6371000; // Earth's radius in meters
@@ -10,8 +19,26 @@ internal static class Program
     {
         Console.WriteLine("start");
 
-        Triangle triangle = new Triangle(45, 111.1, (0, 0), (0, 111.1));
-        triangle.PrintCoordinated();
+        Triangle2D triangle2d = new Triangle2D(45, 111.1, (0, 0), (0, 111.1)); // TODO SIMPLE COORDINATE OBEJCTS
+        triangle2d.PrintCoordinated();
+
+        Triangle3D triangle3dBot = new Triangle3D(43, 11.11, (0, 0, 0), (0, 11.11, 0.0));
+        triangle3dBot.PrintCoordinated();
+
+        Triangle3D triangle3dTop = new Triangle3D(47, 11.11, (0, 0, 0), (0, 11.11, 0.0));
+        triangle3dTop.PrintCoordinated();
+
+        // take lat lon alt , convert to ecef ,run through triangle, convert point a back to lat lon alt
+        var BotRight = CalculateIntersectionPoint(0, 0, triangle3dBot.sideB, 2);
+        var BotLeft = CalculateIntersectionPoint(0, 0, triangle3dBot.sideB, 358);
+
+        var TopRight = CalculateIntersectionPoint(0, 0, triangle3dTop.sideB, 2);
+        var TopLeft = CalculateIntersectionPoint(0, 0, triangle3dTop.sideB, 358);
+
+        Console.WriteLine($"Top Coorinates are TopLeft: {TopLeft} , TopRight: {TopRight}");
+        Console.WriteLine($"Bot Coorinates are BotLeft: {BotLeft} , BotRight: {BotRight}");
+
+        // This worked expressed at the position 0,0,0 being the base and the camera being at 0.11.1,0. Facing 45 degrees down with a 2 degree fielf of view
     }
 
 
@@ -19,8 +46,22 @@ internal static class Program
     // Convert angles to radians
 
 
+    static Tuple<double, double> CalculateIntersectionPoint(double h, double k, double r, double theta)
+    {
+        // Convert the angle to radians
+        double radians = Math.PI * theta / 180.0;
 
+        // Calculate the coordinates
+        double x = h + r * Math.Cos(radians);
+        double y = k + r * Math.Sin(radians);
+
+        // Return the result as a Tuple
+        return Tuple.Create(x, y);
+    }
 }
+
+
+
 public class EarthIntersectPointFinder
 {
     // Function to find the intersection point with Earth
