@@ -18,13 +18,14 @@ namespace FovCubeMaker
         public Triangle(double angleB, double sideA, (double, double) pointC, (double, double) pointB) // Target is point a
         {
 
-            this.sideA = sideA;
-            //this.sideB = sideB;
-            //this.sideC = sideC;
+            
+
             this.angleA = (180 - angleB) - angleC;
             this.angleB = angleB;
             // angle c still = 90
 
+            // calculate side a
+            this.sideA = sideA;
             // calculate side b
             this.sideB = Math.Sqrt(Math.Pow(sideA, 2) + Math.Pow(sideA, 2) - 2 * sideA * sideA * Math.Cos(angleA));
 
@@ -33,6 +34,10 @@ namespace FovCubeMaker
 
             // calculate point a
             this.pointA = (pointC.Item1 + sideA, pointC.Item2 + sideB);
+            // calculate point a
+            this.pointB = pointB;
+            //Calculate point c
+            this.pointC = pointC;
 
         }
 
