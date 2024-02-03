@@ -22,7 +22,7 @@ internal static class Program
         Triangle2D triangle2d = new Triangle2D(45, 111.1, (0, 0), (0, 111.1)); // TODO SIMPLE COORDINATE OBEJCTS
         triangle2d.PrintCoordinated();
 
-        Triangle3D triangle3dBot = new Triangle3D(43, 11.11, (0, 0, 0), (0, 11.11, 0.0));
+        Triangle3D triangle3dBot = new Triangle3D(43, 11.11, (0, 0, 0), (0, 11.11, 0.0)); // TODO alomst best to remove 3d
         triangle3dBot.PrintCoordinated();
 
         Triangle3D triangle3dTop = new Triangle3D(47, 11.11, (0, 0, 0), (0, 11.11, 0.0));
@@ -37,6 +37,12 @@ internal static class Program
 
         Console.WriteLine($"Top Coorinates are TopLeft: {TopLeft} , TopRight: {TopRight}");
         Console.WriteLine($"Bot Coorinates are BotLeft: {BotLeft} , BotRight: {BotRight}");
+
+        Console.WriteLine("Start of test \n");
+
+        var CameraPos = new Coordinate(0, 11.11, 0);
+        var firstboundingbox = CalcBoundingBox(CameraPos, 45, 2, 2);
+        firstboundingbox.PrintCoordinated();
 
         // This worked expressed at the position 0,0,0 being the base and the camera being at 0.11.1,0. Facing 45 degrees down with a 2 degree fielf of view
     }
@@ -57,6 +63,38 @@ internal static class Program
 
         // Return the result as a Tuple
         return Tuple.Create(x, y);
+    }
+
+    static Coordinate CalculateIntersectionPointCoord(double h, double k, double r, double theta)
+    {
+        // Convert the angle to radians
+        double radians = Math.PI * theta / 180.0;
+
+        // Calculate the coordinates
+        double x = h + r * Math.Cos(radians);
+        double y = k + r * Math.Sin(radians);
+
+        // Return the result as a Tuple
+        return new Coordinate(x, y, 0);
+    }
+
+    static BoundingBox CalcBoundingBox(Coordinate CameraPos, double AngleOfView, double FovWidth , double FovHeight) // TODO : URGENT !! Translation of xy in coordinates to triangle neds to be more clear
+    {
+
+        Triangle3D triangle3dBot = new Triangle3D(AngleOfView - FovHeight, CameraPos.y, (CameraPos.x, 0, 0), (CameraPos.x, CameraPos.z, 0.0));// TODO almost best to remove 3d // should it not be camera pos z?
+        triangle3dBot.PrintCoordinated();
+
+        Triangle3D triangle3dTop = new Triangle3D(AngleOfView + FovHeight, CameraPos.y, (CameraPos.x, 0, 0), (CameraPos.x, CameraPos.z, 0.0));// TODO almost best to remove 3d
+        triangle3dTop.PrintCoordinated();
+
+        // Calculate the coordinates of the bounding box
+        Coordinate topLeft = CalculateIntersectionPointCoord(CameraPos.x, CameraPos.y, triangle3dTop.sideB, -FovWidth);
+        Coordinate topRight = CalculateIntersectionPointCoord(CameraPos.x, CameraPos.y, triangle3dTop.sideB, FovWidth);
+        Coordinate botLeft = CalculateIntersectionPointCoord(CameraPos.x, CameraPos.y, triangle3dTop.sideB,  -FovWidth);
+        Coordinate botRight = CalculateIntersectionPointCoord(CameraPos.x, CameraPos.y, triangle3dTop.sideB, FovWidth);
+
+        // Create and return the bounding box
+        return new BoundingBox(topLeft, topRight, botLeft, botRight);
     }
 }
 

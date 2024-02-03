@@ -43,7 +43,41 @@ namespace FovCubeMaker
             this.alt = alt;
         }
     }
-   
+    public class Coordinate
+    {
+        public double x;
+        public double y;
+        public double z;
+
+        public Coordinate(double x, double y, double z)
+        {
+            this.x = x;
+            this.y = y;
+            this.z = z;
+        }
+    }
+    public class BoundingBox
+    {
+        public Coordinate topLeft;
+        public Coordinate topRight;
+        public Coordinate botLeft;
+        public Coordinate botRight;
+
+        public BoundingBox(Coordinate topLeft, Coordinate topRight, Coordinate botLeft, Coordinate botRight)
+        {
+            this.topLeft = topLeft;
+            this.topRight = topRight;
+            this.botLeft = botLeft;
+            this.botRight = botRight;
+        }
+        public void PrintCoordinated()
+        {
+            Console.WriteLine("TopLeft: " + topLeft.x + " " + topLeft.y + " TopRight: " + topRight.x + " " + topRight.y);
+            Console.WriteLine("BotLeft: " + botLeft.x + " " + botLeft.y + " BotRight: " + botRight.x + " " + botRight.y + "\n");
+        }
+    }
+
+
     public static class Utility
     {
 
@@ -64,7 +98,7 @@ namespace FovCubeMaker
             double y = (N + lla.alt) * cosLat * sinLon;
             double z = (N * (1 - eSquared) + lla.alt) * sinLat;
 
-            return new ECEF( x, y, z );
+            return new ECEF(x, y, z);
         }
 
         public static LLA TurnECEFIntoLLA(ECEF ecef)
@@ -90,6 +124,4 @@ namespace FovCubeMaker
             return new LLA(latitude, longitude, altitude);
         }
     }
-
-
 }
