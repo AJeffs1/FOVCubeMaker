@@ -42,6 +42,14 @@ namespace FovCubeMaker
             this.lon = lon;
             this.alt = alt;
         }
+
+        public void NormaliseCoords() 
+        {
+            if (this.lat > 90) this.lat = this .lat - 180;
+            if (this.lat < -90) this.lat = this.lat + 180;
+            if (this.lon > 180) this.lon = this.lon - 360;
+            if (this.lon < -180) this.lon = this.lon + 360;
+        }
     }
     public class Coordinate
     {
@@ -72,8 +80,29 @@ namespace FovCubeMaker
         }
         public void PrintCoordinated()
         {
-            Console.WriteLine("TopLeft: " + topLeft.x + " " + topLeft.y + " TopRight: " + topRight.x + " " + topRight.y);
-            Console.WriteLine("BotLeft: " + botLeft.x + " " + botLeft.y + " BotRight: " + botRight.x + " " + botRight.y + "\n");
+            Console.WriteLine("TopLeft: " + topLeft.x + " " + topLeft.y + ", " + topLeft.z + " TopRight: " + topRight.x + " " + topRight.y + ", " + topRight.z);
+            Console.WriteLine("BotLeft: " + botLeft.x + " " + botLeft.y + ", " + topLeft.z + " BotRight: " + botRight.x + " " + botRight.y + ", " + botRight.z + "\n");
+        }
+    }
+    public class BoundingBoxLLA
+    {
+        public LLA topLeft;
+        public LLA topRight;
+        public LLA botLeft;
+        public LLA botRight;
+
+        public BoundingBoxLLA(LLA topLeft, LLA topRight, LLA botLeft, LLA botRight)
+        {
+            this.topLeft = topLeft;
+            this.topRight = topRight;
+            this.botLeft = botLeft;
+            this.botRight = botRight;
+        }
+
+        public void PrintCoordinated()
+        {
+            Console.WriteLine("TopLeft: " + topLeft.lat + ", " + topLeft.lon + ", " + topLeft.alt + "  TopRight: " + topRight.lat + ", " + topRight.lon + ", " + topRight.alt);
+            Console.WriteLine("BotLeft: " + botLeft.lat + ", " + botLeft.lon + ", " + botLeft.alt + " BotRight: " + botRight.lat + ", " + botRight.lon + ", " + botRight.alt + "\n");
         }
     }
 
@@ -122,6 +151,34 @@ namespace FovCubeMaker
             longitude *= 180.0 / Math.PI;
 
             return new LLA(latitude, longitude, altitude);
+        }
+
+        public static double DistacnceBetweenECEF(ECEF ecef1, ECEF ecef2)
+        {
+            double x = ecef1.x - ecef2.x; // is this always positive ??
+            double y = ecef1.y - ecef2.y;
+            double z = ecef1.z - ecef2.z;
+            double distance = Math.Sqrt(x * x + y * y + z * z);
+            if (distance < 0)
+            {
+                Console.WriteLine("Distance is negative"); // TODO CLEAN
+                distance = -distance;
+            }
+            return distance;
+        }
+
+        public static double DistacnceBetweenLLA(LLA LLA1, LLA LLA2)
+        {
+            double x = LLA1.lat - LLA2.lat; // is this always positive ??
+            double y = LLA1.lon - LLA2.lon;
+            double z = LLA1.alt - LLA2.alt;
+            double distance = Math.Sqrt(x * x + y * y + z * z);
+            if (distance < 0)
+            {
+                Console.WriteLine("Distance is negative"); // TODO CLEAN
+                distance = -distance;
+            }
+            return distance;
         }
     }
 }
