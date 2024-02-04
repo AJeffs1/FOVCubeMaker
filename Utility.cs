@@ -17,19 +17,6 @@ namespace FovCubeMaker
         }
     }
 
-    public class FlatECEF
-    {
-        public double x;
-        public double y;
-        public double z;
-
-        public FlatECEF(double x, double y, double z)
-        {
-            this.x = x;
-            this.y = y;
-            this.z = z;
-        }
-    }
     public class LLA
     {
         public double lat;
@@ -106,7 +93,6 @@ namespace FovCubeMaker
         }
     }
 
-
     public static class Utility
     {
 
@@ -155,29 +141,19 @@ namespace FovCubeMaker
 
         public static double DistacnceBetweenECEF(ECEF ecef1, ECEF ecef2)
         {
-            double x = ecef1.x - ecef2.x; // is this always positive ??
+            double x = ecef1.x - ecef2.x;
             double y = ecef1.y - ecef2.y;
             double z = ecef1.z - ecef2.z;
             double distance = Math.Sqrt(x * x + y * y + z * z);
-            if (distance < 0)
-            {
-                Console.WriteLine("Distance is negative"); // TODO CLEAN
-                distance = -distance;
-            }
             return distance;
         }
 
         public static double DistacnceBetweenLLA(LLA LLA1, LLA LLA2)
         {
-            double x = LLA1.lat - LLA2.lat; // is this always positive ??
+            double x = LLA1.lat - LLA2.lat; // Assume always positive
             double y = LLA1.lon - LLA2.lon;
             double z = LLA1.alt - LLA2.alt;
             double distance = Math.Sqrt(x * x + y * y + z * z);
-            if (distance < 0)
-            {
-                Console.WriteLine("Distance is negative"); // TODO CLEAN
-                distance = -distance;
-            }
             return distance;
         }
     }

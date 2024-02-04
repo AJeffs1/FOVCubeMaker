@@ -3,89 +3,47 @@ using System;
 
 namespace FovCubeMaker;
 
-// TODO
-// 1. Walk though
-// 2. repeatable process
-// 3 used ecef and lla converted walk though
-// 4. testable and 3d party checkable
-// 5. plot points onto a  PLOT POINTS ONTO A 3D GRID AND SEE
-// 6. clean up
-// 7. write up
-
+// Issues
+//1. alt is in degrees of the eath, so 1 = 111.1 km
+//2. if base bos is not under camera it wont work. for claritys sake.
+//3. need unit tests with third party calcs
+//4. would be best to use the curave of the earth instead of treating it as basically flat.
 internal static class Program
 {
-    const double EARTH_RADIUS = 6371000; // Earth's radius in meters
     static void Main(string[] args)
     {
-        Console.WriteLine("start");
+        Console.WriteLine("Start Test 1 ");
+        LLA basePosLLA = new LLA(0, 0, 0);
+        LLA CameraPosLLA = new LLA(0, 0, 1);
+        Console.WriteLine($"CameraPos lat: {CameraPosLLA.lat}, lon {CameraPosLLA.lon}, {CameraPosLLA.alt}");
+        Console.WriteLine($"basePos lat: {basePosLLA.lat}, lon {basePosLLA.lon}, {basePosLLA.alt}");
+        Console.WriteLine($"Angle of view down: 45, FOV width: 2, FOV Height: 2 ,  Azimuth of Camera: 0");
 
-        Triangle2D triangle2d = new Triangle2D(45, 111.1, (0, 0), (0, 111.1)); // TODO SIMPLE COORDINATE OBEJCTS
-        triangle2d.PrintCoordinated();
+        var ConvertedBoundingBoxLLA1 = CalcBoundingBoxBothPosLLA(basePosLLA, CameraPosLLA, 45, 2, 2,0);
+        ConvertedBoundingBoxLLA1.PrintCoordinated();
 
-        Triangle3D triangle3dBot = new Triangle3D(43, 111.11, (0, 0, 0), (0, 0, 111.11),0); // TODO alomst best to remove 3d
-        triangle3dBot.PrintCoordinated();
-
-        Triangle3D triangle3dTop = new Triangle3D(47, 111.11, (0, 0, 0), (0, 0, 111.11),0);
-        triangle3dTop.PrintCoordinated();
-
-        // take lat lon alt , convert to ecef ,run through triangle, convert point a back to lat lon alt
-        var BotRight = CalculateIntersectionPoint(0, 0, triangle3dBot.sideB, 2);
-        var BotLeft = CalculateIntersectionPoint(0, 0, triangle3dBot.sideB, 358);
-
-        var TopRight = CalculateIntersectionPoint(0, 0, triangle3dTop.sideB, 2);
-        var TopLeft = CalculateIntersectionPoint(0, 0, triangle3dTop.sideB, 358);
-
-        Console.WriteLine($"Top Coorinates are TopLeft: {TopLeft} , TopRight: {TopRight}");
-        Console.WriteLine($"Bot Coorinates are BotLeft: {BotLeft} , BotRight: {BotRight}");
-
-        Console.WriteLine("Start of test \n");
-
-        var CameraPos = new Coordinate(0, 0, 11.11);
-        var firstboundingbox = CalcBoundingBox(CameraPos, 45, 2, 2);
-        firstboundingbox.PrintCoordinated();
-
-        Console.WriteLine("Start of just LLA test \n");
-        LLA basePosLLA2 = new LLA(0, 0, 0);
-        LLA CameraPosLLA2 = new LLA(0, 0, 1);
-        var ConvertedBoundingBoxLLA2 = CalcBoundingBoxBothPosLLA(basePosLLA2, CameraPosLLA2, 45, 2, 2,45);
+        Console.WriteLine("Test 2 ");
+        Console.WriteLine($"Angle of view down: 45, FOV width: 2, FOV Height: 2 ,  Azimuth of Camera: 90");
+        var ConvertedBoundingBoxLLA2 = CalcBoundingBoxBothPosLLA(basePosLLA, CameraPosLLA, 45, 2, 2, 90);
         ConvertedBoundingBoxLLA2.PrintCoordinated();
 
-        Console.WriteLine("");
-        Console.WriteLine("");
-        TestBench.Test();
-        // This worked expressed at the position 0,0,0 being the base and the camera being at 0.11.1,0. Facing 45 degrees down with a 2 degree fielf of view
+        Console.WriteLine("Test 3 ");
+        Console.WriteLine($"Angle of view down: 45, FOV width: 2, FOV Height: 2 ,  Azimuth of Camera: 45");
+        var ConvertedBoundingBoxLLA3 = CalcBoundingBoxBothPosLLA(basePosLLA, CameraPosLLA, 45, 2, 2, 45);
+        ConvertedBoundingBoxLLA3.PrintCoordinated();
+
+        Console.WriteLine("Test 4 Realistic Values");
+        LLA basePosLLA2 = new LLA(53.230152, -0.669415, 0);
+        LLA CameraPosLLA2 = new LLA(53.230152, -0.669415, 0.5);
+        Console.WriteLine($"CameraPos lat: {CameraPosLLA2.lat}, lon {CameraPosLLA2.lon}, {CameraPosLLA2.alt}");
+        Console.WriteLine($"basePos lat: {basePosLLA2.lat}, lon {basePosLLA2.lon}, {basePosLLA2.alt}");
+        Console.WriteLine($"Angle of view down: 32, FOV width: 3,4, FOV Height: 3.8 ,  Azimuth of Camera: 198");
+        var ConvertedBoundingBoxLLA4 = CalcBoundingBoxBothPosLLA(basePosLLA2, CameraPosLLA2, 32, 3.4, 3.8, 198);
+        ConvertedBoundingBoxLLA4.PrintCoordinated();
+
+        Console.WriteLine("Fin");
     }
 
-
-
-    // Convert angles to radians
-
-
-    static Tuple<double, double> CalculateIntersectionPoint(double h, double k, double r, double theta)
-    {
-        // Convert the angle to radians
-        double radians = Math.PI * theta / 180.0;
-
-        // Calculate the coordinates
-        double x = h + r * Math.Cos(radians);
-        double y = k + r * Math.Sin(radians);
-
-        // Return the result as a Tuple
-        return Tuple.Create(x, y);
-    }
-
-    static Coordinate CalculateIntersectionPointCoord(double h, double k, double r, double theta)
-    {
-        // Convert the angle to radians
-        double radians = Math.PI * theta / 180.0;
-
-        // Calculate the coordinates
-        double x = h + r * Math.Cos(radians);
-        double y = k + r * Math.Sin(radians);
-
-        // Return the result as a Tuple
-        return new Coordinate(x, y, 0);
-    }
 
     static LLA CalculateIntersectionPointLLA(double h, double k, double r, double theta)
     {
@@ -105,162 +63,27 @@ internal static class Program
         return pos;
 
     }
-    
-    static BoundingBox CalcBoundingBox(Coordinate CameraPos, double AngleOfView, double FovWidth , double FovHeight) // TODO : URGENT !! Translation of xy in coordinates to triangle neds to be more clear
-    { 
-        double Rotionangle = 0;
-        Triangle3D triangle3dBot = new Triangle3D(AngleOfView - FovHeight, CameraPos.z, (CameraPos.x, CameraPos.x, 0), (CameraPos.x, CameraPos.y, CameraPos.z), Rotionangle);// TODO almost best to remove 3d // should it not be camera pos z?
-        triangle3dBot.PrintCoordinated();
 
-        Triangle3D triangle3dTop = new Triangle3D(AngleOfView + FovHeight, CameraPos.z, (CameraPos.x, CameraPos.x, 0), (CameraPos.x, CameraPos.y, CameraPos.z), Rotionangle);// TODO almost best to remove 3d
-        triangle3dTop.PrintCoordinated();
-
-        // Calculate the coordinates of the bounding box
-        Coordinate topLeft = CalculateIntersectionPointCoord(CameraPos.x, CameraPos.y, triangle3dTop.sideB, -FovWidth);
-        Coordinate topRight = CalculateIntersectionPointCoord(CameraPos.x, CameraPos.y, triangle3dTop.sideB, FovWidth);
-        Coordinate botLeft = CalculateIntersectionPointCoord(CameraPos.x, CameraPos.y, triangle3dBot.sideB,  -FovWidth);
-        Coordinate botRight = CalculateIntersectionPointCoord(CameraPos.x, CameraPos.y, triangle3dBot.sideB, FovWidth);
-
-        // Create and return the bounding box
-        return new BoundingBox(topLeft, topRight, botLeft, botRight);
-    }
-
-    static BoundingBoxLLA CalcBoundingBoxBothPosLLA(LLA BasePos, LLA CameraPos, double AngleOfView, double FovWidth, double FovHeight, double rotationAngle) // TODO : URGENT !! Translation of xy in coordinates to triangle neds to be more clear
+    static BoundingBoxLLA CalcBoundingBoxBothPosLLA(LLA BasePos, LLA CameraPos, double AngleOfView, double FovWidth, double FovHeight, double RotationAngle)
     {
         double sideBDistance = Utility.DistacnceBetweenLLA(BasePos, CameraPos);
-        double Rotionangle = rotationAngle;
-        Triangle3D triangle3dBot = new Triangle3D(AngleOfView - FovHeight, sideBDistance, (BasePos.lat, BasePos.lon, BasePos.alt), (CameraPos.lat, CameraPos.lon, CameraPos.alt), Rotionangle);// TODO almost best to remove 3d // should it not be camera pos z?
+
+        // Create two triangles to represent the field of view top and bottom
+        Triangle3D triangle3dBot = new Triangle3D(AngleOfView - FovHeight, sideBDistance, (BasePos.lat, BasePos.lon, BasePos.alt), (CameraPos.lat, CameraPos.lon, CameraPos.alt), RotationAngle);
         triangle3dBot.PrintCoordinated();
 
-        Triangle3D triangle3dTop = new Triangle3D(AngleOfView + FovHeight, sideBDistance, (BasePos.lat, BasePos.lon, BasePos.alt), (CameraPos.lat, CameraPos.lon, CameraPos.alt), Rotionangle);// TODO almost best to remove 3d
+        Triangle3D triangle3dTop = new Triangle3D(AngleOfView + FovHeight, sideBDistance, (BasePos.lat, BasePos.lon, BasePos.alt), (CameraPos.lat, CameraPos.lon, CameraPos.alt), RotationAngle);
         triangle3dTop.PrintCoordinated();
 
-        // Calculate the coordinates of the bounding box
-        LLA topLeft = CalculateIntersectionPointLLA(BasePos.lat, BasePos.lon, triangle3dTop.sideB, rotationAngle + -FovWidth);
-        LLA topRight = CalculateIntersectionPointLLA(BasePos.lat, BasePos.lon, triangle3dTop.sideB, rotationAngle + FovWidth);
-        LLA botLeft = CalculateIntersectionPointLLA(BasePos.lat, BasePos.lon, triangle3dBot.sideB, rotationAngle + -FovWidth);
-        LLA botRight = CalculateIntersectionPointLLA(BasePos.lat, BasePos.lon, triangle3dBot.sideB, rotationAngle + FovWidth);
+        // Calculate the coordinates of the bounding box, using Basic Circle Equation and Parametric Equations using trigonometry
+        // a circle from each triangle and the points of itnersection at the angle of fov
+        LLA topLeft = CalculateIntersectionPointLLA(BasePos.lat, BasePos.lon, triangle3dTop.sideB, RotationAngle + -FovWidth);
+        LLA topRight = CalculateIntersectionPointLLA(BasePos.lat, BasePos.lon, triangle3dTop.sideB, RotationAngle + FovWidth);
+        LLA botLeft = CalculateIntersectionPointLLA(BasePos.lat, BasePos.lon, triangle3dBot.sideB, RotationAngle + -FovWidth);
+        LLA botRight = CalculateIntersectionPointLLA(BasePos.lat, BasePos.lon, triangle3dBot.sideB, RotationAngle + FovWidth);
 
         // Create and return the bounding box
         return new BoundingBoxLLA(topLeft, topRight, botLeft, botRight);
     }
 }
 
-
-
-public class EarthIntersectPointFinder
-{
-    // Function to find the intersection point with Earth
-    public static LLA FindEarthIntersectPoint(Vector3D origin, Vector3D vector, double earthRadius)
-    {
-        // Step 1: Turn the vector into a unit vector pointing in the same direction.
-        Vector3D unitVectorTowardGround = vector.Normalize();
-
-        // Step 2: Binary search to find the required vector length.
-        // Step 2a: Extend the vector until it intersects with the Earth.
-        double lengthGuess = 1;
-        Console.WriteLine($"while 1 start ");
-        while ((origin + unitVectorTowardGround * lengthGuess).Norm() > earthRadius)
-        {
-            Console.WriteLine((origin + unitVectorTowardGround * lengthGuess).Norm());
-            lengthGuess *= 2;
-        }
-
-        // Upper bound on length is found.
-        double lengthUpperBound = lengthGuess;
-
-        // Lower bound is half the previous guess.
-        double lengthLowerBound = lengthGuess / 2;
-
-        // Step 2b: Binary search for the exact required length.
-        double error = 9999;
-        double tolerance = 0.1; // Tolerance of 0.1 km
-        Console.WriteLine($"while 2 start ");
-
-        while (Math.Abs(error) > tolerance)
-        {
-            // Standard binary search to adjust upper or lower bounds.
-            double newGuess = (lengthLowerBound + lengthUpperBound) / 2;
-            double newVectorEnd = (origin + unitVectorTowardGround * newGuess).Norm();
-
-            if (newVectorEnd > earthRadius)
-                lengthLowerBound = newGuess;
-            else
-                lengthUpperBound = newGuess;
-
-            error = newVectorEnd - earthRadius;
-            Console.WriteLine(Math.Abs(error));
-
-        }
-
-        // Calculate the intersection point
-        Vector3D intersectionPoint = origin + unitVectorTowardGround * lengthLowerBound;
-
-        // Here you'd need to implement your equivalent to wgs84.subpoint() in C# to get latitude and longitude.
-        // Assume it returns latitude and longitude in degrees as a tuple.
-        // Replace the line below with your implementation.
-        (double latitude, double longitude) = GetLatitudeLongitude(intersectionPoint);
-
-        return new LLA(latitude, longitude,0);
-    }
-
-    // Replace this method with your implementation of getting latitude and longitude from the intersection point.
-    private static (double, double) GetLatitudeLongitude(Vector3D intersectionPoint)
-    {
-        // Implement your logic to get latitude and longitude from the intersection point.
-        // Return values as a tuple of latitude and longitude.
-        // For demonstration purposes, returning (0, 0) here.
-        return (0, 0);
-    }
-
-    public static Vector3D AzimuthElevationToUnitVector(double azimuthDegrees, double elevationDegrees)
-    {
-        // Convert azimuth and elevation angles from degrees to radians
-        double azimuthRad = azimuthDegrees * (Math.PI / 180.0);
-        double elevationRad = elevationDegrees * (Math.PI / 180.0);
-
-        // Calculate the components of the unit vector
-        double x = Math.Cos(elevationRad) * Math.Cos(azimuthRad);
-        double y = Math.Cos(elevationRad) * Math.Sin(azimuthRad);
-        double z = Math.Sin(elevationRad);
-
-        // Create and return the unit vector
-        return new Vector3D(x, y, z);
-    }
-}
-
-public class Vector3D // ?
-{
-    public double X { get; set; }
-    public double Y { get; set; }
-    public double Z { get; set; }
-
-    public Vector3D(double x, double y, double z)
-    {
-        X = x;
-        Y = y;
-        Z = z;
-    }
-
-    public double Norm()
-    {
-        return Math.Sqrt(X * X + Y * Y + Z * Z);
-    }
-
-    public Vector3D Normalize()
-    {
-        double length = Norm();
-        return new Vector3D(X / length, Y / length, Z / length);
-    }
-
-    public static Vector3D operator *(Vector3D vector, double scalar)
-    {
-        return new Vector3D(vector.X * scalar, vector.Y * scalar, vector.Z * scalar);
-    }
-
-    public static Vector3D operator +(Vector3D vector1, Vector3D vector2)
-    {
-        return new Vector3D(vector1.X + vector2.X, vector1.Y + vector2.Y, vector1.Z + vector2.Z);
-    }
-
-}
