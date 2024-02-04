@@ -37,17 +37,44 @@ internal static class Program
 
         Console.WriteLine($"Top Coorinates are TopLeft: {TopLeft} , TopRight: {TopRight}");
         Console.WriteLine($"Bot Coorinates are BotLeft: {BotLeft} , BotRight: {BotRight}");
+        Console.WriteLine("");
 
-        Console.WriteLine("Start of test \n");
+        Console.WriteLine("Start of test on lla only coords \n");
 
-        var CameraPos = new Coordinate(0, 11.11, 0);
+        var CameraPos = new ECEF(0, 11.11, 0);
         var firstboundingbox = CalcBoundingBox(CameraPos, 45, 2, 2);
+
         firstboundingbox.PrintCoordinated();
 
         // This worked expressed at the position 0,0,0 being the base and the camera being at 0.11.1,0. Facing 45 degrees down with a 2 degree fielf of view
+
+        Console.WriteLine("Test On Real LLAs test");
+
+
+        LLA basePosLLA = new LLA(0, 0, 0);
+        LLA CameraPosLLA = new LLA(0, 111.1, 0);
+
+        ECEF BasePosECEF = Utility.TurnLLAIntoPosition(basePosLLA);
+        ECEF CameraPosECEF = Utility.TurnLLAIntoPosition(CameraPosLLA);
+
+        var ConvertedBoundingBox = CalcBoundingBoxBothPos(BasePosECEF, CameraPosECEF, 45, 2, 2);
+        var ConvertedBoundingBoxLLA = CalcBoundingBoxBothPosReturnLLA(BasePosECEF, CameraPosECEF, 45, 2, 2);
+        ConvertedBoundingBox.PrintCoordinated();
+        Console.WriteLine("Second calc bounding box ");
+        Console.WriteLine("");
+
+        ConvertedBoundingBoxLLA.PrintCoordinated();
+
+        Console.WriteLine("Test with Just LLAs bounding box ");
+        Console.WriteLine("");
+
+        LLA basePosLLA2 = new LLA(1, 1, 0);
+        LLA CameraPosLLA2 = new LLA(1, 1, 111.1);
+        var ConvertedBoundingBoxLLA2 = CalcBoundingBoxBothPosLLA(basePosLLA2, CameraPosLLA2, 45, 2, 2);
+        ConvertedBoundingBoxLLA2.PrintCoordinated();
     }
 
-
+    // First, unsure of changes madce, into new bramnch adn step through
 
     // Convert angles to radians
 
@@ -65,7 +92,7 @@ internal static class Program
         return Tuple.Create(x, y);
     }
 
-    static Coordinate CalculateIntersectionPointCoord(double h, double k, double r, double theta)
+    static ECEF CalculateIntersectionPointCoord(double h, double k, double r, double theta)
     {
         // Convert the angle to radians
         double radians = Math.PI * theta / 180.0;
@@ -75,27 +102,88 @@ internal static class Program
         double y = k + r * Math.Sin(radians);
 
         // Return the result as a Tuple
-        return new Coordinate(x, y, 0);
+        return new ECEF(x, y, 0);
     }
 
-    static BoundingBox CalcBoundingBox(Coordinate CameraPos, double AngleOfView, double FovWidth , double FovHeight) // TODO : URGENT !! Translation of xy in coordinates to triangle neds to be more clear
+    static BoundingBoxECEF CalcBoundingBox(ECEF CameraPos, double AngleOfView, double FovWidth, double FovHeight) // TODO : URGENT !! Translation of xy in coordinates to triangle neds to be more clear
     {
 
         Triangle3D triangle3dBot = new Triangle3D(AngleOfView - FovHeight, CameraPos.y, (CameraPos.x, 0, 0), (CameraPos.x, CameraPos.z, 0.0));// TODO almost best to remove 3d // should it not be camera pos z?
-        triangle3dBot.PrintCoordinated();
+        //triangle3dBot.PrintCoordinated();
 
         Triangle3D triangle3dTop = new Triangle3D(AngleOfView + FovHeight, CameraPos.y, (CameraPos.x, 0, 0), (CameraPos.x, CameraPos.z, 0.0));// TODO almost best to remove 3d
-        triangle3dTop.PrintCoordinated();
+        //triangle3dTop.PrintCoordinated();
 
         // Calculate the coordinates of the bounding box
-        Coordinate topLeft = CalculateIntersectionPointCoord(CameraPos.x, CameraPos.y, triangle3dTop.sideB, -FovWidth);
-        Coordinate topRight = CalculateIntersectionPointCoord(CameraPos.x, CameraPos.y, triangle3dTop.sideB, FovWidth);
-        Coordinate botLeft = CalculateIntersectionPointCoord(CameraPos.x, CameraPos.y, triangle3dTop.sideB,  -FovWidth);
-        Coordinate botRight = CalculateIntersectionPointCoord(CameraPos.x, CameraPos.y, triangle3dTop.sideB, FovWidth);
+        ECEF topLeft = CalculateIntersectionPointCoord(CameraPos.x, CameraPos.y, triangle3dTop.sideB, -FovWidth);
+        ECEF topRight = CalculateIntersectionPointCoord(CameraPos.x, CameraPos.y, triangle3dTop.sideB, FovWidth);
+        ECEF botLeft = CalculateIntersectionPointCoord(CameraPos.x, CameraPos.y, triangle3dBot.sideB, -FovWidth);
+        ECEF botRight = CalculateIntersectionPointCoord(CameraPos.x, CameraPos.y, triangle3dBot.sideB, FovWidth);
 
         // Create and return the bounding box
-        return new BoundingBox(topLeft, topRight, botLeft, botRight);
+        return new BoundingBoxECEF(topLeft, topRight, botLeft, botRight);
     }
+
+    static BoundingBoxECEF CalcBoundingBoxBothPos(ECEF BasePos, ECEF CameraPos, double AngleOfView, double FovWidth, double FovHeight) // TODO : URGENT !! Translation of xy in coordinates to triangle neds to be more clear
+    {
+        double sideBDistance = Utility.DistacnceBetweenECEF(BasePos, CameraPos);
+
+        Triangle3D triangle3dBot = new Triangle3D(AngleOfView - FovHeight, sideBDistance, (BasePos.x, BasePos.y, BasePos.z), (CameraPos.x, CameraPos.y, CameraPos.z));// TODO almost best to remove 3d // should it not be camera pos z?
+        //triangle3dBot.PrintCoordinated();
+
+        Triangle3D triangle3dTop = new Triangle3D(AngleOfView + FovHeight, sideBDistance, (BasePos.x, BasePos.y, BasePos.z), (CameraPos.x, CameraPos.y, CameraPos.z));// TODO almost best to remove 3d
+        //triangle3dTop.PrintCoordinated();
+
+        // Calculate the coordinates of the bounding box
+        ECEF topLeft = CalculateIntersectionPointCoord(BasePos.x, BasePos.y, triangle3dTop.sideB, -FovWidth);
+        ECEF topRight = CalculateIntersectionPointCoord(BasePos.x, BasePos.y, triangle3dTop.sideB, FovWidth);
+        ECEF botLeft = CalculateIntersectionPointCoord(BasePos.x, BasePos.y, triangle3dBot.sideB, -FovWidth);
+        ECEF botRight = CalculateIntersectionPointCoord(BasePos.x, BasePos.y, triangle3dBot.sideB, FovWidth);
+
+        // Create and return the bounding box
+        return new BoundingBoxECEF(topLeft, topRight, botLeft, botRight);
+    }
+
+    static BoundingBoxLLA CalcBoundingBoxBothPosReturnLLA(ECEF BasePos, ECEF CameraPos, double AngleOfView, double FovWidth, double FovHeight) // TODO : URGENT !! Translation of xy in coordinates to triangle neds to be more clear
+    {
+        double sideBDistance = Utility.DistacnceBetweenECEF(BasePos, CameraPos);
+
+        Triangle3D triangle3dBot = new Triangle3D(AngleOfView - FovHeight, sideBDistance, (BasePos.x, BasePos.y, BasePos.z), (CameraPos.x, CameraPos.y, CameraPos.z));// TODO almost best to remove 3d // should it not be camera pos z?
+        //triangle3dBot.PrintCoordinated();
+
+        Triangle3D triangle3dTop = new Triangle3D(AngleOfView + FovHeight, sideBDistance, (BasePos.x, BasePos.y, BasePos.z), (CameraPos.x, CameraPos.y, CameraPos.z));// TODO almost best to remove 3d
+        //triangle3dTop.PrintCoordinated();
+
+        // Calculate the coordinates of the bounding box
+        ECEF topLeft = CalculateIntersectionPointCoord(BasePos.x, BasePos.y, triangle3dTop.sideB, -FovWidth);
+        ECEF topRight = CalculateIntersectionPointCoord(BasePos.x, BasePos.y, triangle3dTop.sideB, FovWidth);
+        ECEF botLeft = CalculateIntersectionPointCoord(BasePos.x, BasePos.y, triangle3dBot.sideB, -FovWidth);
+        ECEF botRight = CalculateIntersectionPointCoord(BasePos.x, BasePos.y, triangle3dBot.sideB, FovWidth);
+
+        // Create and return the bounding box
+        return new BoundingBoxLLA(Utility.TurnECEFIntoLLA(topLeft), Utility.TurnECEFIntoLLA(topRight), Utility.TurnECEFIntoLLA(botLeft), Utility.TurnECEFIntoLLA(botRight));
+    }
+
+    static BoundingBoxECEF CalcBoundingBoxBothPosLLA(LLA BasePos, LLA CameraPos, double AngleOfView, double FovWidth, double FovHeight) // TODO : URGENT !! Translation of xy in coordinates to triangle neds to be more clear
+    {
+        double sideBDistance = Utility.DistacnceBetweenLLA(BasePos, CameraPos);
+
+        Triangle3D triangle3dBot = new Triangle3D(AngleOfView - FovHeight, sideBDistance, (BasePos.lat, BasePos.lon, BasePos.alt), (CameraPos.lat, CameraPos.lon, CameraPos.alt));// TODO almost best to remove 3d // should it not be camera pos z?
+        //triangle3dBot.PrintCoordinated();
+
+        Triangle3D triangle3dTop = new Triangle3D(AngleOfView + FovHeight, sideBDistance, (BasePos.lat, BasePos.lon, BasePos.alt), (CameraPos.lat, CameraPos.lon, CameraPos.alt));// TODO almost best to remove 3d
+        //triangle3dTop.PrintCoordinated();
+
+        // Calculate the coordinates of the bounding box
+        ECEF topLeft = CalculateIntersectionPointCoord(BasePos.lat, BasePos.lon, triangle3dTop.sideB, -FovWidth);
+        ECEF topRight = CalculateIntersectionPointCoord(BasePos.lat, BasePos.lon, triangle3dTop.sideB, FovWidth);
+        ECEF botLeft = CalculateIntersectionPointCoord(BasePos.lat, BasePos.lon, triangle3dTop.sideB, -FovWidth);
+        ECEF botRight = CalculateIntersectionPointCoord(BasePos.lat, BasePos.lon, triangle3dTop.sideB, FovWidth);
+
+        // Create and return the bounding box
+        return new BoundingBoxECEF(topLeft, topRight, botLeft, botRight);
+    }
+
 }
 
 
@@ -153,7 +241,7 @@ public class EarthIntersectPointFinder
         // Replace the line below with your implementation.
         (double latitude, double longitude) = GetLatitudeLongitude(intersectionPoint);
 
-        return new LLA(latitude, longitude,0);
+        return new LLA(latitude, longitude, 0);
     }
 
     // Replace this method with your implementation of getting latitude and longitude from the intersection point.
